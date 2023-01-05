@@ -5,6 +5,8 @@ import credentials
 import requests
 import logging
 import json
+from dateutil import parser as dateutilparser
+from datetime import timedelta
 
 database_file = "transactions.sqlite"
 bankdb = DB.DB(database_file)
@@ -63,6 +65,7 @@ def get_and_store_transactions(startdate_isoformat = None):
                 cursor = False
             
         else:
+            print(url)
             cursor = False
             match response.status_code:
                 case 400:
@@ -88,7 +91,15 @@ def main():
             if account["status"] == "INACTIVE":
                 logger.error("There is an account that is INACTIVE. This means that credentials have stopped working.")
 
-    get_and_store_transactions()
+    # figure out the newest transaction
+    newestdate = bankdb.get_newest_transaction()
+
+    if newestdate is not None:
+        # subtract two weeks from the date
+        twoweeksago = dateutilparser.parse(newestdate['date']) - timedelta(days=14)
+        get_and_store_transactions(twoweeksago.isoformat("T","seconds").replace('+00:00', 'Z'))
+    else:
+        get_and_store_transactions()
 
 
 

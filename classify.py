@@ -19,6 +19,76 @@ bankdb = DB.DB(database_file)
 logger = logging.getLogger("mylogger")
 logger.setLevel(logging.INFO)
 
+
+# -------------------------------------------
+def split_classification(row):
+    # Sometimes you have a single purchase that needs to be split up
+    
+    total_amount = float(row['amount'])
+    # update the autocomplete
+    completer = NestedCompleter.from_nested_dict(
+        bankdb.get_and_update_used_classifications(tools.base_classification.base_classification))
+    
+    # Have we seen this before?
+    defaultclass = bankdb.get_suggested_classification(row['merchant'],row['description'])
+    if defaultclass != "":
+        print(f"Previous Classification > {defaultclass}")
+
+    # to make this mentally easier, convert everything to positive numbers
+    if total_amount > 0:
+        signmultiplier = 1
+    else:
+        total_amount = abs(total_amount)
+        signmultiplier = -1
+
+    while total_amount > 0:
+        print(f"Splitting Transaction... ${total_amount} remaining")
+        amount = float(prompt('Amount > '))
+
+        if amount > total_amount:
+            amount = total_amount
+
+        while True:
+            # no default as likely to always require a different classification
+            classification = prompt('Classification > ', completer=completer, default="")
+
+            match classification:
+                case 'x':
+                    # exit
+                    classified = None
+                    total_amount = 0
+                    break
+                case 'q':
+                    quit()
+
+            # classification now contains the classification data. Need to parse this and split out
+            classified = parse_classification(classification)
+
+            # validate
+            validinput = check_parse_classification(classified)
+            if not validinput:
+                print("Something looks funky with that classification")
+                print(classified)
+                print("Please try again")
+            else:
+                break
+
+        # Now push this into the database
+        if classified is not None:
+            bankdb.classify_transaction(
+                row['transaction_id'],
+                amount * signmultiplier,
+                classified['cat1'],
+                classified['cat2'],
+                classified['cat3'],
+                " ".join(classified['tags']),
+                classified['description']
+            )
+
+        # subtract this amount from the total
+        total_amount -= amount
+
+
 # -------------------------------------------
 def check_parse_classification(classified):
     # do a sanity check
@@ -43,7 +113,7 @@ def parse_classification(classification):
     tagcomplete = False
     # this is space separated text
     # cat1 cat2 cat3 #tags description
-    items = classification.split(' ')
+    items = classification.lower().split(' ')
     for i, item in enumerate(items):
         if i <= 2 and not item.startswith("#") and not catcomplete:
             match i:
@@ -92,35 +162,44 @@ def pretty_print_transaction(row):
 # -------------------------------------------
 def main():
 
-    rows = bankdb.get_unclassified_transactions(10)
+    rows = bankdb.get_unclassified_transactions(None, "2023-01-01")
 
     for row in rows:
         
         pretty_print_transaction(row)
 
-        completer = NestedCompleter.from_nested_dict(tools.base_classification.base_classification)
+        # update the autocomplete
+        completer = NestedCompleter.from_nested_dict(
+            bankdb.get_and_update_used_classifications(tools.base_classification.base_classification))
 
         while True:
 
             # Have we seen this before?
             defaultclass = bankdb.get_suggested_classification(row['merchant'],row['description'])
             
-            classification = prompt('> ', completer=completer, default=defaultclass)
+            classification = prompt('Classification > ', completer=completer, default=defaultclass)
 
             # There are a couple of special commands that we need to check the input for
             # s = user has asked to split this transaction into two (or more) classifications
             # x = user has asked to skip this row and come back to it later.
 
             match classification:
-                # skip
                 case 'x':
+                    # skip
                     classified = None
                     break
                 case 'q':
                     quit()
                 case 's':
-                    # split the transaction
-                    pass
+                    # split the transaction. This does its own database addition
+                    # so set classified to None and break out of the loop to get to
+                    # the next row to process.
+                    split_classification(row)
+                    classified = None
+                    break
+                case 'm':
+                    # Display more details about the transaction
+                    print(json.dumps(json.loads(row['jsondata']),sort_keys=True, indent=4))
 
 
             # classification now contains the classification data. Need to parse this

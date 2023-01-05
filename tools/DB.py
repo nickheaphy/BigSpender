@@ -1,6 +1,7 @@
 import sqlite3
 import json
-
+from datetime import datetime   
+from dateutil import tz
 
 class DB():
 
@@ -102,9 +103,18 @@ class DB():
         self.dbconn.commit()
 
     # ------------------------------------------------
-    def get_unclassified_transactions(self, maximum_rows = None):
+    def get_unclassified_transactions(self, maximum_rows = None, startdate = None):
         #SELECT * FROM raw_trans LEFT JOIN trans_class ON raw_trans.transaction_id = trans_class.transaction_id WHERE trans_class.transaction_id IS NULL
-        sql = '''
+        if startdate is not None:
+            #convert the start date to UTC (assume localtime)
+            datetime_object = datetime.strptime(startdate, '%Y-%m-%d')
+            datetime_object.replace(tzinfo=tz.tzlocal())
+            datetime_object = datetime_object.astimezone(tz.tzutc())
+            sqldatequery = f" AND raw_trans.date >= '{datetime_object.isoformat()}' "
+        else:
+            sqldatequery = ""
+
+        sql = f'''
             SELECT
                 raw_trans.transaction_id,
                 raw_trans.date,
@@ -112,11 +122,13 @@ class DB():
                 raw_trans.amount,
                 raw_trans.description,
                 a.name as account,
-                json_extract(raw_trans.jsondata, '$.merchant.name') as merchant
+                json_extract(raw_trans.jsondata, '$.merchant.name') as merchant,
+                raw_trans.jsondata
             FROM raw_trans
             INNER JOIN (select DISTINCT raw_account.account_id, raw_account.name from raw_account) a ON a.account_id = raw_trans.account_id
             LEFT JOIN trans_class ON raw_trans.transaction_id = trans_class.transaction_id
             WHERE trans_class.transaction_id IS NULL
+            {sqldatequery}
             ORDER BY raw_trans.date
         '''
         if maximum_rows is not None:
@@ -197,3 +209,62 @@ class DB():
             return " ".join(item for item in data if item and item.strip())
         else:
             return ""
+
+    # ------------------------------------------------
+    def get_and_update_used_classifications(self, existingclassification):
+        # this is used by the prompt_text NestedCompleter
+        # it is a dictionary like existingclassification
+        classifications = self.dbconn.execute('''
+            SELECT DISTINCT
+                cat1,
+                cat2,
+                cat3
+            FROM trans_class
+            WHERE cat1 <> "" OR cat1 <> NULL
+            ORDER BY cat1, cat2, cat3 DESC
+        ''')
+
+        rows = classifications.fetchall()
+
+        for row in rows:
+            cat1 = row['cat1']
+            cat2 = row['cat2']
+            cat3 = row['cat3']
+            #print(f"{cat1} {cat2} {cat3}")
+
+            if cat1 in existingclassification:
+                if existingclassification[cat1] is not None:
+                    if cat2 is not None and cat2 in existingclassification[cat1]:
+                        if existingclassification[cat1][cat2] is not None and cat3 is not None and cat3 in existingclassification[cat1][cat2]:
+                            pass
+                        elif existingclassification[cat1][cat2] is None and cat3 is not None:
+                            existingclassification[cat1][cat2] = {cat3 : None}
+                        elif cat3 is not None:
+                            existingclassification[cat1][cat2][cat3] = None
+                    elif cat2 is not None and cat3 is not None:
+                        existingclassification[cat1].update({cat2 : {cat3 : None}})
+                    elif cat2 is not None and cat3 is None:
+                        existingclassification[cat1].update({cat2 : None})
+                elif cat2 is not None and cat3 is not None:
+                    existingclassification[cat1] = {cat2 : {cat3 : None}}
+                elif cat2 is not None and cat3 is None:
+                    existingclassification[cat1] = {cat2 : None}
+
+            else:
+                # key does not exist
+                if cat3 is not None:
+                    existingclassification[cat1] = {cat2 : {cat3 : None}}
+                elif cat2 is not None:
+                    existingclassification[cat1] = {cat2 : None}
+                else:
+                    existingclassification[cat1] = None
+
+        return dict(sorted(existingclassification.items()))
+
+
+    # ------------------------------------------------
+    def get_newest_transaction(self):
+        transactions = self.dbconn.execute('''
+            select date from raw_trans order by date DESC LIMIT 1
+        ''')
+        return transactions.fetchone()

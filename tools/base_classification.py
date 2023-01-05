@@ -11,7 +11,11 @@ base_classification = {
         'parking': None,
         'tires': None,
         'registration': None,
-        'fares': None
+        'fares': None,
+        'fuel': {
+            'nick': None,
+            'bernadette': None
+        }
     },
     'food': {
         'groceries': None,
@@ -25,7 +29,6 @@ base_classification = {
     },
     'utilities': {
         'electricity': None,
-        'greenbin': None,
         'internet': None,
         'cellphone': {
             'bernadette': None,
@@ -58,18 +61,22 @@ base_classification = {
         'dentist': {
             'bernadette': None,
             'nick': None
-        }
+        },
+        'pet': None
     },
     'insurance': {
         'health': None,
         'car' : None,
         'life': None,
         'income_protection': None,
+        'pet': None
     },
     'household': {
         'toiletries': None,
         'cleaning': None,
         'tools': None,
+        'greenbin': None,
+        'dump': None,
     },
     'personal': {
         'gym': {
@@ -85,6 +92,14 @@ base_classification = {
             'nick': None
         },
         'education': {
+            'bernadette': None,
+            'nick': None
+        },
+        'cash_withdrawal' : {
+            'bernadette': None,
+            'nick': None
+        },
+        'hobbies': {
             'bernadette': None,
             'nick': None
         }
@@ -114,11 +129,23 @@ base_classification = {
         'holiday': {
             'flights': None,
             'accommodation': None,
-            'food': None
+            'food': None,
+            'cattery': None
         }
     },
     'transfer': {
         'between': None,
         'external_account': None
+    },
+    'income': {
+        'pay': {
+            'bernadette': None,
+            'nick': None
+        },
+        'interest' : None,
+        'gift': {
+            'bernadette': None,
+            'nick': None
+        }
     }
 }
