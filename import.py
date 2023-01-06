@@ -83,7 +83,7 @@ def main():
     data = get_accounts()
 
     if data is not None and data['success'] == True:
-
+        print("Processing Accounts....")
         for account in data["items"]:
 
             bankdb.store_account_data(account)
@@ -97,8 +97,10 @@ def main():
     if newestdate is not None:
         # subtract two weeks from the date
         twoweeksago = dateutilparser.parse(newestdate['date']) - timedelta(days=14)
+        print(f"Getting transactions from: {twoweeksago}")
         get_and_store_transactions(twoweeksago.isoformat("T","seconds").replace('+00:00', 'Z'))
     else:
+        print("Getting all transactions...")
         get_and_store_transactions()
 
 
