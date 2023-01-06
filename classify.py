@@ -19,6 +19,8 @@ bankdb = DB.DB(database_file)
 logger = logging.getLogger("mylogger")
 logger.setLevel(logging.INFO)
 
+startdate = "2023-01-01"
+startdate = None
 
 # -------------------------------------------
 def split_classification(row):
@@ -113,23 +115,23 @@ def parse_classification(classification):
     tagcomplete = False
     # this is space separated text
     # cat1 cat2 cat3 #tags description
-    items = classification.lower().split(' ')
+    items = classification.split(' ')
     for i, item in enumerate(items):
         if i <= 2 and not item.startswith("#") and not catcomplete:
             match i:
                 case 0:
-                    classified['cat1'] = item
+                    classified['cat1'] = item.lower()
                     continue
                 case 1:
-                    classified['cat2'] = item
+                    classified['cat2'] = item.lower()
                     continue
                 case 2:
-                    classified['cat3'] = item
+                    classified['cat3'] = item.lower()
                     catcomplete = True
                     continue
 
         if not tagcomplete and item.startswith("#"):
-            classified['tags'].add(item)
+            classified['tags'].add(item.lower())
             catcomplete = True
             continue
 
@@ -143,12 +145,14 @@ def parse_classification(classification):
 # -------------------------------------------
 def pretty_print_transaction(row):
     prompt_toolkit.shortcuts.clear()
+
+    # convert the UTC date to local
     thedate = dateutilparser.parse(row['date'])
     thedate.replace(tzinfo=tz.tzutc())
     thedate = thedate.astimezone(tz.tzlocal())
 
     table = [
-        ['Date', thedate],
+        ['Date', thedate.strftime("%Y-%m-%d %H:%M:%S (%A)")],
         ['Description', row['description']],
         ['Merchant', row['merchant']],
         ['Account', row['account']],
@@ -162,7 +166,7 @@ def pretty_print_transaction(row):
 # -------------------------------------------
 def main():
 
-    rows = bankdb.get_unclassified_transactions(None, "2023-01-01")
+    rows = bankdb.get_unclassified_transactions(None, startdate)
 
     for row in rows:
         
