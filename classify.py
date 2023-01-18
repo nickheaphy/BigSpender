@@ -2,8 +2,8 @@
 
 import tools.DB as DB
 import tools.base_classification
-import credentials
-import requests
+# import credentials
+# import requests
 import logging
 import json
 import prompt_toolkit
@@ -20,7 +20,7 @@ logger = logging.getLogger("mylogger")
 logger.setLevel(logging.INFO)
 
 startdate = "2023-01-01"
-startdate = None
+# startdate = None
 
 # -------------------------------------------
 def split_classification(row):
@@ -115,7 +115,10 @@ def parse_classification(classification):
     tagcomplete = False
     # this is space separated text
     # cat1 cat2 cat3 #tags description
-    items = classification.split(' ')
+
+    # this stupid split and combine is to remove any additional double spaces just in case
+    items = " ".join(classification.split(' ')).split(' ')
+
     for i, item in enumerate(items):
         if i <= 2 and not item.startswith("#") and not catcomplete:
             match i:
@@ -167,6 +170,7 @@ def pretty_print_transaction(row):
 def main():
 
     rows = bankdb.get_unclassified_transactions(None, startdate)
+    print(f"{len(rows)} transactions to classify")
 
     for row in rows:
         
@@ -180,6 +184,15 @@ def main():
 
             # Have we seen this before?
             defaultclass = bankdb.get_suggested_classification(row['merchant'],row['description'])
+
+            # Did this come from a personal spending account?
+            if 'bernadette' in row['account'].lower():
+                if '#bernadette' not in defaultclass:
+                    defaultclass += " #bernadette"
+
+            if 'nick' in row['account'].lower():
+                if '#nick' not in defaultclass:
+                    defaultclass += " #nick"
             
             classification = prompt('Classification > ', completer=completer, default=defaultclass)
 
