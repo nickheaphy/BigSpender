@@ -4,7 +4,7 @@ from datetime import datetime
 from dateutil import tz
 
 def convert_date_to_beginning_of_day_UTC_isoformat(date_string):
-    return _convert_date_to_UTC_isoformat(date_string, "00:00:00")
+    return _convert_date_to_UTC_isoformat(date_string, "00:00:01")
 
 def convert_date_to_end_of_day_UTC_isoformat(date_string):
     return _convert_date_to_UTC_isoformat(date_string, "23:59:59")
