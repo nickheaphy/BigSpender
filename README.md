@@ -6,6 +6,8 @@ Imports the bank transactions via Akahu and stores them into a SQLite database.
 
 Allows you to classify the transactions and then report on the results.
 
+Note: Initially I started writing this to be quite generic in case other people might want to use, but realised that is it has quite a specific use case (someone in NZ and that wants a CLI interface) - once I came to this conclusion I started including a lot more things that were unique to my use case, as the reality is, probably nobody else will use this and if they do, they can fork and make their own changes.
+
 ## Setup
 
 You will need to signup for a Akahu developer account and connect your bank details up. Edit the `credentials.py` file and add your Akahu credentials.
@@ -35,3 +37,22 @@ Split transactions allow you to split the amount in the transaction between mult
 ### Reporting
 
 Todo - still need to decided how to show. Jupyter Notebook?
+
+
+## Todo
+
+- Need to trim the input.
+- Check split on double spaces
+- ~~Display day of the week in the classifier~~
+- Ability to go back and reedit a classification (both a back button, but also a separate tool to reclassify displaying a list)
+
+
+## Kindle Links
+
+- https://www.instructables.com/Literary-Clock-Made-From-E-reader/
+- https://matthealy.com/kindle
+- https://www.mobileread.com/forums/showthread.php?t=97636 ()
+- https://www.mobileread.com/forums/showthread.php?t=191158 (Kindle 4 Jailbreak)
+- https://www.mobileread.com/forums/showthread.php?t=322900 (Run scripts using RTC)
+- https://www.mobileread.com/forums/showpost.php?p=3812831&postcount=2 (More RTC stuff)
+- https://www.mobileread.com/forums/showthread.php?t=235821&page=3 (More RTC stuff)
