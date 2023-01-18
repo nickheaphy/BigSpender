@@ -12,6 +12,10 @@ class DB():
         self.setup_tables()
 
     # ------------------------------------------------
+    def __del__(self):
+        self.dbconn.close()
+
+    # ------------------------------------------------
     def setup_tables(self):
 
         # Somewhere to store the raw transaction data
