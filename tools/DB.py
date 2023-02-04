@@ -65,7 +65,7 @@ class DB():
         return self.dbconn.commit()
 
     # ------------------------------------------------
-    def store_account_data(self, datadict):
+    def store_account_data(self, datadict: dict):
         self.dbconn.execute("INSERT INTO raw_account (account_id, name, balance, updated_at, jsondata) VALUES (?,?,?,?,?)",
             [
                 datadict["_id"],
@@ -78,7 +78,7 @@ class DB():
         self.dbconn.commit()
 
     # ------------------------------------------------
-    def store_transaction_data(self, datadict):
+    def store_transaction_data(self, datadict: dict):
         self.dbconn.execute('''
             INSERT OR REPLACE INTO raw_trans (
                 transaction_id,
@@ -107,7 +107,7 @@ class DB():
         self.dbconn.commit()
 
     # ------------------------------------------------
-    def get_unclassified_transactions(self, maximum_rows = None, startdate = None):
+    def get_unclassified_transactions(self, maximum_rows: int = None, startdate: str = None) -> sqlite3.Row:
         #SELECT * FROM raw_trans LEFT JOIN trans_class ON raw_trans.transaction_id = trans_class.transaction_id WHERE trans_class.transaction_id IS NULL
         if startdate is not None:
             #convert the start date to UTC (assume localtime)
@@ -190,7 +190,7 @@ class DB():
         self.dbconn.commit()
 
     # ------------------------------------------------
-    def get_suggested_classification(self, merchant, description):
+    def get_suggested_classification(self, merchant: str, description: str) -> str:
         # have we seen this merchant or description before?
         transactions = self.dbconn.execute('''
             SELECT
@@ -215,7 +215,7 @@ class DB():
             return ""
 
     # ------------------------------------------------
-    def get_and_update_used_classifications(self, existingclassification):
+    def get_and_update_used_classifications(self, existingclassification: dict) -> dict:
         # this is used by the prompt_text NestedCompleter
         # it is a dictionary like existingclassification
         classifications = self.dbconn.execute('''
@@ -267,8 +267,18 @@ class DB():
 
 
     # ------------------------------------------------
-    def get_newest_transaction(self):
+    def get_newest_transaction(self) -> sqlite3.Row:
         transactions = self.dbconn.execute('''
             select date from raw_trans order by date DESC LIMIT 1
         ''')
         return transactions.fetchone()
+
+    # -------------------------------------------------
+    def last_rowid_raw_trans(self) -> int:
+        last_row = self.dbconn.execute('''SELECT max(ROWID) from raw_trans''')
+        return int(last_row.fetchone()[0])
+
+     # -------------------------------------------------
+    def total_rows_raw_trans(self) -> int:
+        last_row = self.dbconn.execute('''SELECT COUNT(ROWID) from raw_trans''')
+        return int(last_row.fetchone()[0])
