@@ -36,7 +36,9 @@ Split transactions allow you to split the amount in the transaction between mult
 
 ### Reporting
 
-Todo - still need to decided how to show. Jupyter Notebook?
+Todo - still need to decided how to show.
+
+Currently there is a `report.py` that I have been working on. The is intended to output an image that will be displayed on a Kindle in our kitchen. At the moment I am still trying to figure out what to display (that is more than just showing how much more money my wife spends than I do...)
 
 
 ## Todo

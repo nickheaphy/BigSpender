@@ -8,6 +8,8 @@ requests = "*"
 prompt-toolkit = "*"
 tabulate = "*"
 python-dateutil = "*"
+matplotlib = "*"
+pillow = "*"
 
 [dev-packages]
 
