@@ -94,6 +94,9 @@ def main():
     # figure out the newest transaction
     newestdate = bankdb.get_newest_transaction()
 
+    # total rows
+    total_transactions = bankdb.total_rows_raw_trans()
+
     if newestdate is not None:
         # subtract two weeks from the date
         twoweeksago = dateutilparser.parse(newestdate['date']) - timedelta(days=14)
@@ -103,7 +106,9 @@ def main():
         print("Getting all transactions...")
         get_and_store_transactions()
 
-
+    # how many rows were added
+    updated_total_transactions = bankdb.total_rows_raw_trans()
+    print(f'{updated_total_transactions - total_transactions} new transactions')
 
 
 
