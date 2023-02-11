@@ -24,6 +24,8 @@ Run `import.py` to create and import the Account and Transaction data. This is p
 
 Run `classify.py` to classify the transactions.
 
+![Classification Example](documentation/img/classification_example.png)
+
 For each unclassifed transaction you can give it up to three categories, then an unlimited number of tags and a description (note that if using a description then at least one tag is mandatory). You just enter this as text in the format `cat1 cat2 cat3 #tag1 #tag2 Description`
 
 The classification prompt does Autocomplete based on the `base_classification.py` as well as any additional categories added to the database.
@@ -36,9 +38,9 @@ Split transactions allow you to split the amount in the transaction between mult
 
 ### Reporting
 
-Todo - still need to decided how to show.
+Todo - still need to decided how to show reports.
 
-Currently there is a `report.py` that I have been working on. The is intended to output an image that will be displayed on a Kindle in our kitchen. At the moment I am still trying to figure out what to display (that is more than just showing how much more money my wife spends than I do...)
+Currently there is a `report.py` that I have been working on. The is intended to output an image that will be displayed on a [Kindle](kindle/README.md) in our kitchen. At the moment I am still trying to figure out what to display (that is more than just showing how much more money my wife spends than I do...)
 
 
 ## Todo
@@ -47,14 +49,6 @@ Currently there is a `report.py` that I have been working on. The is intended to
 - Check split on double spaces
 - ~~Display day of the week in the classifier~~
 - Ability to go back and reedit a classification (both a back button, but also a separate tool to reclassify displaying a list)
+- Add a description to the classification without needing a #tag
 
 
-## Kindle Links
-
-- https://www.instructables.com/Literary-Clock-Made-From-E-reader/
-- https://matthealy.com/kindle
-- https://www.mobileread.com/forums/showthread.php?t=97636 ()
-- https://www.mobileread.com/forums/showthread.php?t=191158 (Kindle 4 Jailbreak)
-- https://www.mobileread.com/forums/showthread.php?t=322900 (Run scripts using RTC)
-- https://www.mobileread.com/forums/showpost.php?p=3812831&postcount=2 (More RTC stuff)
-- https://www.mobileread.com/forums/showthread.php?t=235821&page=3 (More RTC stuff)

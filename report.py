@@ -1,9 +1,12 @@
+# Work in progress - reporting. Dumps info to screen but also
+# to a image
 
 import tools.Reporting as Reporting
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 import matplotlib.figure
 from PIL import Image, ImageDraw, ImageFont
+from typing import Tuple
 
 database_file = "transactions.sqlite"
 bankdb = Reporting.Reporting(database_file)
@@ -14,17 +17,23 @@ end_date = '2023-12-31'
 kindle_screen = (600,800)
 
 # ---------------------------------------------------------------
-def scale(image, scalefactor):
+def scale(image: Image, scalefactor: float):
     width = image.width
     height = image.height
     return image.resize((round(width*scalefactor), round(height*scalefactor)))
 
 # ---------------------------------------------------------------
 # https://stackoverflow.com/questions/245447/how-do-i-draw-text-at-an-angle-using-pythons-pil
-def draw_text_90_into (text: str, into, at):
+def draw_text_90_into(text: str, into: Image, at: tuple[int, int]):
+    """Draw text rotated 90 deg
+
+    Args:
+        text (str): The text to draw
+        into (Image): The image to draw into
+        at (tuple[int, int]): the x,y position of where to draw
+    """
     # Measure the text area
     font = ImageFont.truetype ('Arial.ttf', 12)
-    #wi, hi = font.getsize (text)
     _, _, wi, _ = font.getbbox(text)
     #hight based on all lower case (to allow for desenders)
     _, _, _, hi = font.getbbox('abcdefghijklmnopqrstuvwxyzs')
@@ -192,8 +201,13 @@ def plot_spend_by_category(imgfilename):
     plt.savefig(imgfilename, bbox_inches='tight',format='png', transparent=True)
 
 
-def draw_spend_by_category(pilimage):
-    '''Create a plot (not using matplotlib'''
+def draw_spend_by_category(pilimage: Image):
+    """Draw the spending by category directly onto an image (positioned on the left)
+
+    Args:
+        pilimage (Image): The image to draw into
+    """
+
     width = 25
     height = kindle_screen[1]
 
@@ -259,6 +273,27 @@ def draw_spend_by_category(pilimage):
 
         #rotated text
         draw_text_90_into(rect, pilimage, (round(x0)+2,round(y0)+2))
+
+# ---------------------------------------------------------------
+def draw_text(pilimage: Image, text: str, at: tuple[int, int]) -> tuple[int, int]:
+    """Draw text at (x,y) position
+
+    Args:
+        pilimage (Image): the image to draw into
+        text (str): the text
+        at (tuple[int, int]): (x,y) position to draw at
+
+    Returns:
+        (tuple[int, int]): (w,h) width and height of the text
+    """
+    # what is the height of the text
+    font = ImageFont.truetype ('Arial.ttf', 24)
+    _, _, wi, _ = font.getbbox(text)
+    _, _, _, hi = font.getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+    d = ImageDraw.Draw(pilimage)
+    d.text (at, text, font = font, fill = (0, 0, 0))
+    return (wi, hi)
+
 # ---------------------------------------------------------------
 def main():
     print(f"Report Range: {start_date} to {end_date}")
@@ -285,23 +320,39 @@ def main():
     test = bankdb.spending_by_tag(start_date, end_date, "nick bernadette")
     print(tabulate(test))
 
+    # create temp images for the plots
     plot_personal_spending('temp/personalspend.png')
     plot_spend_vrs_income("temp/spendvrsincome.png")
     #plot_spend_by_category("temp/spendbycat.png")
     
     # Build the Kindle Image
     kindle = Image.new('RGBA', kindle_screen, (255,255,255,255))
-    # Open and resize
+    
+    # Open and resize the individual plots
     personalspend = Image.open('temp/personalspend.png')
     personalspend = scale(personalspend, 0.6)
     spendincome = Image.open('temp/spendvrsincome.png')
     spendincome = scale(spendincome, 0.6)
     #spendcat = Image.open("temp/spendbycat.png")
     #image1 = image1.resize((426, 240))
-    kindle.paste(personalspend,(0,0),mask=personalspend)
+
+    # Paste the temp images
+    kindle.paste(personalspend,(50,0),mask=personalspend)
     kindle.paste(spendincome,(300,0),mask=spendincome)
     #kindle.paste(spendcat,(300-round(spendcat.width/2),180),mask=spendcat)
+    
+    # directly draw the data
     draw_spend_by_category(kindle)
+    position = (100,300)
+    wh = draw_text(kindle,"Work Expenses:", position)
+    position = (position[0]+wh[0], position[1])
+    work_expenses = bankdb.work_expenses(start_date, end_date)
+    for row in work_expenses:
+        wh = draw_text(kindle, f"{row['cat3'].capitalize()} : ${row['amount']:.2f}", position)
+        position = (position[0], position[1]+wh[1])
+    #wh = draw_text(kindle,"Hello", position)
+
+    # save the images to display on the kindle
     kindle.save("temp/report.png","PNG")
     kindle.show()
 

@@ -2,6 +2,8 @@
 
 import tools.DB as DB
 import tools.date_tools as date_tools
+from typing import List
+import sqlite3
 
 ignore_account1 = 'acc_clccx4vex000308l3fttlelqx'
 
@@ -146,3 +148,33 @@ class Reporting():
             spendamount += row['amount']
 
         return [{'cat1':'spend','amount':spendamount}]
+    
+    # ------------------------------------------------
+    def work_expenses(self, date_from: str, date_to: str) -> List[sqlite3.Row]:
+        """Returns the outstanding work expenses, grouped by cat3
+
+        Args:
+            date_from (str): Date in YYYY-MM-DD format
+            date_to (str): Date in YYYY-MM-DD format
+
+        Returns:
+            list: A list of sql.rows
+        """
+        
+        sql = f'''select cat3, sum(trans_class.amount) as amount
+        FROM trans_class
+        LEFT JOIN raw_trans ON trans_class.transaction_id = raw_trans.transaction_id
+        WHERE
+            raw_trans.date >= '{date_tools.convert_date_to_beginning_of_day_UTC_isoformat(date_from)}'
+        AND
+            raw_trans.date <= '{date_tools.convert_date_to_end_of_day_UTC_isoformat(date_to)}'
+        AND
+            cat1 = 'work'
+        AND
+            cat2 = 'expense_claim' 
+        GROUP BY
+            cat3
+        '''
+        
+        transactions = self.db.dbconn.execute(sql)
+        return transactions.fetchall()

@@ -2,6 +2,7 @@ import sqlite3
 import json
 from datetime import datetime   
 from dateutil import tz
+from typing import List
 
 class DB():
 
@@ -107,7 +108,7 @@ class DB():
         self.dbconn.commit()
 
     # ------------------------------------------------
-    def get_unclassified_transactions(self, maximum_rows: int = None, startdate: str = None) -> sqlite3.Row:
+    def get_unclassified_transactions(self, maximum_rows: int = None, startdate: str = None) -> List[sqlite3.Row]:
         #SELECT * FROM raw_trans LEFT JOIN trans_class ON raw_trans.transaction_id = trans_class.transaction_id WHERE trans_class.transaction_id IS NULL
         if startdate is not None:
             #convert the start date to UTC (assume localtime)
