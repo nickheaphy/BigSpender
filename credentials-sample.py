@@ -3,3 +3,8 @@ headers = {
     "X-Akahu-Id": "app_token_xxxxxxxxxxxxxxxxxxxxxxx",
     "authorization": "Bearer user_token_xxxxxxxxxxxxxxxxxxxxxxx"
 }
+
+scp = {
+    "path":"pathtoscpthefileto"
+}
+

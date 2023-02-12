@@ -178,3 +178,24 @@ class Reporting():
         
         transactions = self.db.dbconn.execute(sql)
         return transactions.fetchall()
+    
+    # ------------------------------------------------
+    def account_balances(self) -> List[sqlite3.Row]:
+        """Return all the newest account balances
+
+        Returns:
+            List[sqlite3.Row]: balance dataset
+        """
+     
+        # get the newest balances (highest ROWID is the newest transactions)
+        sql = f'''SELECT name, balance FROM raw_account 
+                    WHERE ROWID IN
+                        (select MAX(ROWID)
+                         FROM raw_account
+                         GROUP BY name)
+                    ORDER BY
+                      balance
+                '''
+        
+        transactions = self.db.dbconn.execute(sql)
+        return transactions.fetchall()

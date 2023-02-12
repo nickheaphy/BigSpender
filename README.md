@@ -2,7 +2,7 @@
 
 Basic budget tracking tool on the command line.
 
-Imports the bank transactions via Akahu and stores them into a SQLite database.
+Imports the bank transactions via [Akahu](https://www.akahu.nz/) and stores them into a SQLite database.
 
 Allows you to classify the transactions and then report on the results.
 
@@ -42,6 +42,7 @@ Todo - still need to decided how to show reports.
 
 Currently there is a `report.py` that I have been working on. The is intended to output an image that will be displayed on a [Kindle](kindle/README.md) in our kitchen. At the moment I am still trying to figure out what to display (that is more than just showing how much more money my wife spends than I do...)
 
+![Kindle Example](documentation/img/kindle_ss.jpg)
 
 ## Todo
 

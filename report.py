@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import matplotlib.figure
 from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple
+import credentials
+import subprocess
+import shlex
+import datetime
 
 database_file = "transactions.sqlite"
 bankdb = Reporting.Reporting(database_file)
@@ -275,7 +279,7 @@ def draw_spend_by_category(pilimage: Image):
         draw_text_90_into(rect, pilimage, (round(x0)+2,round(y0)+2))
 
 # ---------------------------------------------------------------
-def draw_text(pilimage: Image, text: str, at: tuple[int, int]) -> tuple[int, int]:
+def draw_text(pilimage: Image, text: str, at: tuple[int, int], fontsize: int = 24) -> tuple[int, int]:
     """Draw text at (x,y) position
 
     Args:
@@ -287,7 +291,7 @@ def draw_text(pilimage: Image, text: str, at: tuple[int, int]) -> tuple[int, int
         (tuple[int, int]): (w,h) width and height of the text
     """
     # what is the height of the text
-    font = ImageFont.truetype ('Arial.ttf', 24)
+    font = ImageFont.truetype ('Arial.ttf', fontsize)
     _, _, wi, _ = font.getbbox(text)
     _, _, _, hi = font.getbbox("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
     d = ImageDraw.Draw(pilimage)
@@ -343,6 +347,7 @@ def main():
     
     # directly draw the data
     draw_spend_by_category(kindle)
+    
     position = (100,300)
     wh = draw_text(kindle,"Work Expenses:", position)
     position = (position[0]+wh[0], position[1])
@@ -350,11 +355,27 @@ def main():
     for row in work_expenses:
         wh = draw_text(kindle, f"{row['cat3'].capitalize()} : ${row['amount']:.2f}", position)
         position = (position[0], position[1]+wh[1])
-    #wh = draw_text(kindle,"Hello", position)
+   
+    position = (100, position[1]+20)
+    wh = draw_text(kindle,"Balances:", position)
+    position = (position[0]+wh[0], position[1])
+    account_balances = bankdb.account_balances()
+    for row in account_balances:
+        wh = draw_text(kindle, f"{row['name'].capitalize()} : ${row['balance']:.2f}", position, 16)
+        position = (position[0], position[1]+wh[1])
+   
+    #Timestamp
+    position=(70,780)
+    draw_text(kindle, str(datetime.datetime.now())+" NH", position, 12)
 
     # save the images to display on the kindle
-    kindle.save("temp/report.png","PNG")
+    kindle2 = Image.new('L', kindle_screen)
+    kindle2.paste(kindle)
+    kindle2.save("temp/report.png","PNG", compress_level=0, dpi=(300,300))
     kindle.show()
+
+    #transfer the image to the server for kindle display
+    subprocess.call(shlex.split(f"scp temp/report.png {credentials.scp['path']}"))
 
 # -------------------------------------------
 if __name__ == '__main__':

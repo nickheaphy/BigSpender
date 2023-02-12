@@ -268,7 +268,7 @@ class DB():
 
 
     # ------------------------------------------------
-    def get_newest_transaction(self) -> sqlite3.Row:
+    def get_newest_transaction(self) -> List[sqlite3.Row]:
         transactions = self.dbconn.execute('''
             select date from raw_trans order by date DESC LIMIT 1
         ''')
